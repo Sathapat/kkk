@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/1.8.1/flowbite.min.css" rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.js"></script>
+
+    <title>Document</title>
+
+    <style>
+        div.intro-wrap {
+            margin: 30px 10px;
+        }
+
+        div.intro-wrap>p.chord-line {
+            position: relative;
+        }
+
+        div.lyrics-wrap>p.chord-line {
+            line-height: 3em;
+            position: relative;
+        }
+
+        span.chord {
+            position: absolute;
+            line-height: 0em;
+            top: 0;
+            margin-left: -15px;
+            font-weight: bold;
+            color: #059669;
+        }
+
+
+        span.intro-chord {
+            line-height: 0em;
+            font-weight: bold;
+            color: #059669;
+            padding: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="max-w-8xl mx-auto px-4 sm:px-6 md:px-8 mt-4">
+        <div class="grid md:grid-cols-2 grid-cols-1 gap-4 mb-4 h-screen	">
+            <div class="p-6 bg-white border border-gray-200 rounded shadow dark:bg-gray-800 dark:border-gray-700">
+                <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">เพิ่มคอร์ดเพลง</h5>
+                <div class="mb-3 mt-3 font-normal text-gray-700 dark:text-gray-400">
+                    <div class="mb-3 font-normal text-gray-700 dark:text-gray-400">
+                        <div
+                            class="w-full mb-4 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                            <div class="px-4 py-2 bg-white rounded-b-lg dark:bg-gray-800">
+                                <textarea id="content" rows="8"
+                                    class="h-screen	 block w-full px-0 text-sm text-gray-800 bg-white border-0 dark:bg-gray-800 focus:ring-0 dark:text-white dark:placeholder-gray-400 text-xl"
+                                    placeholder="1. ถ้าเป็น Intro ให้ครอบด้วย <- -> และคอร์ดให้ครอบด้วย * * &#10;2. ถ้าเป็น เนื้อเพลง ให้ครอบด้วย <+ +> และคอร์ดให้ครอบด้วย [ ] &#10;&#10;**ตัวอย่าง&#10;<-&#10;INTRO : *E*|*E*|*A*|*B*|*C#m*|*A*|*B*|*B*&#10;(2 Times)&#10;->&#10;<+&#10;[E]ยิ้มให้กับฉันหน่อย&#10;แค่หึง[G#m]เล็กน้อยแค่คอย[A]รัก&#10;[E]ได้โปรดอย่าโกรธฉันขนาด[C#m]นั้น อีกนาน[B]คงขาดใจ&#10;+>"
+                                    required></textarea>
+                                <br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 bg-white border border-gray-200 rounded shadow dark:bg-gray-800 dark:border-gray-700">
+                <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">พรีวิว</h5>
+                <div class="text-right">
+                    <button type="submit" id="download"
+                        class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-white bg-red-700 rounded-lg focus:ring-4 focus:ring-red-200 dark:focus:ring-red-900 hover:bg-red-800">
+                        โหลด PDF
+                    </button>
+                </div>
+                <div class="mb-3 mt-3 font-normal text-gray-700 dark:text-gray-400">
+                    <div class="text-center text-xl h-screen" id="preview"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"
+    integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+
+    window.onload = () => {
+        const content = document.querySelector('#content');
+        content.addEventListener('keyup', () => {
+            let setIntroWrap = content.value.replace(/\<-\R*([\s\S]*?)\R*\->/g, "<div class='intro-wrap'>$&</div>");
+            let setIntroBreakLine = setIntroWrap.replace(/\<-\R*([\s\S]*?)\R*\->/g, "<p class='chord-line'>$&</p>");
+            let setIntroChord = setIntroBreakLine.replace(/\*(.*?)\*/g, "<span class='intro-chord'>$1</span>");
+
+            let setChordLylicsWrap = setIntroChord.replace(/<\+\R*([\s\S]*?)\R*\+>/g, "<div class='lyrics-wrap'>$&</div>");
+            let setChordLylicsBreakLine = setChordLylicsWrap.replace(/.+/g, "<p class='chord-line'>$&</p>")
+            let setChordLylics = setChordLylicsBreakLine.replace(/\[(.*?)\]/g, "<span class='chord'>$1</span>");
+
+            let removeSymbol1 = setChordLylics.replaceAll('<-', '');
+            let removeSymbol2 = removeSymbol1.replaceAll('->', '');
+            let removeSymbol3 = removeSymbol2.replaceAll('+>', '');
+            let removeSymbol4 = removeSymbol3.replaceAll('<+', '');
+
+
+            let result = removeSymbol4;
+
+            console.log(result)
+
+            document.querySelector("#preview").innerHTML = result;
+
+
+        });
+
+        document.getElementById("download")
+            .addEventListener("click", () => {
+                const invoice = this.document.getElementById("preview");
+                console.log(invoice);
+                console.log(window);
+                var opt = {
+                    margin: 1,
+                    filename: 'myfile.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+                html2pdf().from(invoice).set(opt).save();
+            })
+    }
+
+</script>
